@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPI Detect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --bg: #0a1424;
+    --panel: #101c30;
+    --inset: #07101c;
+    --line: #2a3d5c;
+    --line-soft: #1c2c44;
+    --text: #e6eef8;
+    --muted: #8a9bb3;
+    --accent: #5aa8ff;
+    --ok: #4f8cff;
+    --alert: #f08c2a;
+    --alert-dim: #4a2c10;
+    --mid: #7eb3e8;
+    --radius: 2px;
+    --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", "Consolas", ui-monospace, monospace;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    margin: 0;
+    color: var(--text);
+    background: var(--bg);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .app {
+    height: 100dvh;
+    max-height: 100dvh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px 16px;
+    min-height: 48px;
+    padding: 0 clamp(12px, 1.6vw, 20px);
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .mark {
+    width: 11px;
+    height: 22px;
+    background: var(--accent);
+    clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+    flex: 0 0 auto;
+  }
+
+  .wordmark {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .wordmark small {
+    display: block;
+    margin-top: 1px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+  }
+
+  .channel {
+    min-width: 0;
+    padding-left: 16px;
+    border-left: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .mode-badge::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    background: var(--muted);
+  }
+
+  .badge-live { color: var(--accent); }
+  .badge-live::before {
+    background: var(--accent);
+    animation: live-blink 1.6s steps(2) infinite;
+  }
+
+  @keyframes live-blink {
+    50% { opacity: 0.25; }
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .source-button,
+  .source-submit {
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 12px;
+  }
+
+  .source-button:hover,
+  .source-submit:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .source-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 20;
+    width: min(360px, 92vw);
+    padding: 14px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    display: grid;
+    gap: 12px;
+    white-space: normal;
+  }
+
+  .source-panel[hidden] { display: none; }
+
+  .source-panel label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .source-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .source-row input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--line);
+    background: var(--inset);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .source-panel input[type="file"] {
+    width: 100%;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .source-error {
+    color: var(--alert);
+    font-size: 12px;
+  }
+
+  #clock { color: var(--text); }
+
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(240px, 26vw, 320px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .workspace {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    padding: clamp(8px, 1.4vh, 16px) clamp(8px, 1.4vw, 16px) clamp(8px, 1.4vh, 16px) clamp(12px, 1.6vw, 20px);
+    overflow: hidden;
+  }
+
+  .video-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    background: #000;
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+
+  #stream {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: #000;
+  }
+
+  .osd {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 12px;
+    height: 34px;
+    background: #000c;
+    color: #c5d0e0;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .osd-live {
+    color: var(--accent);
+    letter-spacing: 0.16em;
+  }
+
+  .osd-spacer { flex: 1; }
+
+  .hud-button {
+    height: 22px;
+    padding: 0 8px;
+    border: 1px solid #3d5478;
+    background: transparent;
+    color: #c5d0e0;
+    cursor: pointer;
+    font: inherit;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .hud-button:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .video-wrap:fullscreen {
+    border: 0;
+    background: #000;
+  }
+
+  .video-wrap:fullscreen #stream {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+  }
+
+  .system-status {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(380px, calc(100% - 32px));
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .system-status.error {
+    border-color: var(--alert);
+    color: #fde4c8;
+    background: var(--alert-dim);
+  }
+
+  .system-status.hidden { display: none; }
+
+  aside {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    overflow: hidden;
+    border-left: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .kpi {
+    padding: clamp(8px, 1.4vh, 14px) 12px clamp(8px, 1.2vh, 12px);
+    border-right: 1px solid var(--line-soft);
+  }
+
+  .kpi:last-child { border-right: 0; }
+
+  .label {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .value {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: clamp(1.2rem, 2.6vh, 1.75rem);
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .value.ok { color: var(--ok); }
+  .value.alert { color: var(--alert); }
+  .value.plain { color: var(--text); }
+
+  .compliance {
+    padding: clamp(10px, 1.6vh, 16px) 14px clamp(12px, 1.8vh, 18px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .compliance-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  #compliance-pct {
+    font-family: var(--mono);
+    font-size: clamp(1.1rem, 2.2vh, 1.4rem);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+
+  #compliance-text {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .bar-wrap {
+    margin-top: 12px;
+    height: 3px;
+    background: var(--inset);
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--ok);
+    transition: width .35s ease, background .2s ease;
+  }
+
+  .events {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0 0;
+  }
+
+  .events .label {
+    padding: 0 14px 10px;
+  }
+
+  .log-area {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .log-entry {
+    display: grid;
+    grid-template-columns: 68px 8px 1fr;
+    align-items: start;
+    gap: 8px;
+    padding: 8px 14px;
+    color: var(--text);
+    font-size: 12px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .log-entry time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .log-dot {
+    width: 7px;
+    height: 7px;
+    margin-top: 4px;
+    background: var(--ok);
+  }
+
+  .log-dot.bad { background: var(--alert); }
+
+  .empty {
+    padding: 8px 14px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  footer {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-height: 36px;
+    padding: 0 clamp(12px, 1.6vw, 20px);
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  footer span strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  footer .credit {
+    margin-left: auto;
+  }
+
+  .meter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .meter .bar-wrap {
+    margin: 0;
+    width: 64px;
+  }
+
+  @media (max-width: 980px) {
+    main {
+      grid-template-columns: 1fr;
+      grid-template-rows: minmax(0, 1.35fr) minmax(0, 1fr);
+    }
+    aside {
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+    .workspace { padding: 8px 8px 0; }
+  }
+
+  @media (max-width: 720px) {
+    .topbar {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+    .wordmark small,
+    .mode-badge { display: none; }
+    .channel { padding-left: 0; border-left: 0; }
+    footer .meter .bar-wrap { display: none; }
+  }
+
+  @media (max-height: 700px) {
+    .wordmark small { display: none; }
+    .kpi { padding: 8px 10px; }
+    .compliance { padding: 8px 12px 10px; }
+    #compliance-text { display: none; }
+    .events { padding-top: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <div class="wordmark">
+        EPI Detect
+        <small>Monitoramento de colete</small>
+      </div>
+    </div>
+    <span class="channel" id="source-label" title="{{ source_label|default('Câmera') }}">{{ source_label|default('Câmera') }}</span>
+    <span class="mode-badge {% if mode == 'LIVE' %}badge-live{% endif %}" id="mode-badge">{{ mode }}</span>
+    <div class="topbar-right">
+      <button class="source-button" type="button" id="source-button">Fonte</button>
+      <div class="source-panel" id="source-panel" hidden>
+        <div>
+          <label for="source-url">Link da stream</label>
+          <div class="source-row">
+            <input id="source-url" type="text" placeholder="rtsp://usuario:senha@host:8554/camera" autocomplete="off">
+            <button class="source-submit" type="button" id="source-url-button">Abrir</button>
+          </div>
+        </div>
+        <div>
+          <label for="source-file">Arquivo MP4</label>
+          <input id="source-file" type="file" accept="video/mp4,video/*,.mp4,.avi,.mkv,.mov,.webm">
+        </div>
+        <div class="source-error" id="source-error" hidden></div>
+      </div>
+      <span id="clock">--:--:--</span>
+      <span id="uptime">00:00:00</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="workspace" aria-label="Vídeo monitorado">
+      <div class="video-wrap">
+        <img id="stream" src="/video_feed" alt="Câmera monitorada">
+        <div class="osd">
+          <span class="osd-live" id="osd-mode">{% if mode == 'LIVE' %}REC{% else %}ARQ{% endif %}</span>
+          <span id="fps-overlay">-- fps</span>
+          <span class="osd-spacer"></span>
+          <button class="hud-button" type="button" id="fullscreen-button">Tela cheia</button>
+        </div>
+        <div class="system-status" id="system-status">Inicializando câmera e modelo...</div>
+      </div>
+    </section>
+
+    <aside aria-label="Indicadores">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="label">Com EPI</div>
+          <div class="value ok" id="val-ok">0</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Sem EPI</div>
+          <div class="value alert" id="val-bad">0</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Pessoas</div>
+          <div class="value plain" id="val-total">0</div>
+        </div>
+      </div>
+
+      <section class="compliance">
+        <div class="compliance-head">
+          <div class="label">Conformidade</div>
+          <div id="compliance-pct">--%</div>
+        </div>
+        <div id="compliance-text">Sem pessoas na cena</div>
+        <div class="bar-wrap">
+          <div id="compliance-bar" class="bar-fill"></div>
+        </div>
+      </section>
+
+      <section class="events">
+        <div class="label">Eventos</div>
+        <div class="log-area" id="log-area">
+          <div class="empty">Nenhum evento ainda</div>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <footer>
+    <span class="meter">
+      TX <strong id="fps-num">-- fps</strong>
+      <span class="bar-wrap"><span class="bar-fill" id="fps-bar"></span></span>
+    </span>
+    <span class="meter">
+      DET <strong id="det-num">-- fps</strong>
+      <span class="bar-wrap"><span class="bar-fill" id="det-bar"></span></span>
+    </span>
+    <span>Local</span>
+    <span class="credit">Henrique Erdei</span>
+  </footer>
+</div>
+
+<script>
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  }
+  setInterval(tick, 1000); tick();
+
+  const start = Date.now();
+  setInterval(() => {
+    const s = Math.floor((Date.now() - start) / 1000);
+    const h = String(Math.floor(s / 3600)).padStart(2, '0');
+    const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const sec = String(s % 60).padStart(2, '0');
+    document.getElementById('uptime').textContent = `${h}:${m}:${sec}`;
+  }, 1000);
+
+  const videoWrap = document.querySelector('.video-wrap');
+  const fullscreenButton = document.getElementById('fullscreen-button');
+
+  fullscreenButton.addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement) await videoWrap.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch (e) {}
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    fullscreenButton.textContent = document.fullscreenElement ? 'Sair' : 'Tela cheia';
+  });
+
+  const sourceButton = document.getElementById('source-button');
+  const sourcePanel = document.getElementById('source-panel');
+  const sourceError = document.getElementById('source-error');
+  const sourceUrl = document.getElementById('source-url');
+  const sourceFile = document.getElementById('source-file');
+  const statusEl = document.getElementById('system-status');
+
+  sourceButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    sourcePanel.hidden = !sourcePanel.hidden;
+  });
+  document.addEventListener('click', () => { sourcePanel.hidden = true; });
+  sourcePanel.addEventListener('click', (event) => event.stopPropagation());
+
+  function showSourceError(message) {
+    sourceError.hidden = !message;
+    sourceError.textContent = message || '';
+  }
+
+  function applySourceMeta(mode, label) {
+    const channel = document.getElementById('source-label');
+    const badge = document.getElementById('mode-badge');
+    const osd = document.getElementById('osd-mode');
+    channel.textContent = label;
+    channel.title = label;
+    badge.textContent = mode;
+    badge.classList.toggle('badge-live', mode === 'LIVE');
+    osd.textContent = mode === 'LIVE' ? 'REC' : 'ARQ';
+  }
+
+  async function postSource(body, contentType) {
+    showSourceError('');
+    statusEl.textContent = 'Trocando fonte...';
+    statusEl.classList.remove('hidden', 'error');
+    const opts = { method: 'POST', body };
+    if (contentType) opts.headers = { 'Content-Type': contentType };
+    try {
+      const r = await fetch('/source', opts);
+      const d = await r.json().catch(() => ({ ok: false, error: 'Falha ao trocar a fonte.' }));
+      if (!r.ok || !d.ok) {
+        showSourceError(d.error || 'Não foi possível abrir a fonte.');
+        return;
+      }
+      applySourceMeta(d.mode, d.source_label);
+      sourcePanel.hidden = true;
+      sourceFile.value = '';
+    } catch (e) {
+      showSourceError('Falha ao trocar a fonte.');
+    }
+  }
+
+  document.getElementById('source-url-button').addEventListener('click', async () => {
+    const url = sourceUrl.value.trim();
+    if (!url) {
+      showSourceError('Cole o link da stream.');
+      return;
+    }
+    await postSource(JSON.stringify({ url }), 'application/json');
+  });
+
+  sourceUrl.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') document.getElementById('source-url-button').click();
+  });
+
+  sourceFile.addEventListener('change', async () => {
+    if (!sourceFile.files.length) return;
+    const data = new FormData();
+    data.append('file', sourceFile.files[0]);
+    await postSource(data);
+  });
+
+  const MAX_FPS = 30;
+  const logArea = document.getElementById('log-area');
+  let lastBad = 0;
+
+  function formatDetectionEvent(count) {
+    if (count === 0) return 'Todos com colete';
+    if (count === 1) return '1 pessoa sem colete';
+    return `${count} pessoas sem colete`;
+  }
+
+  function appendLogEntry(time, ok, message) {
+    if (logArea.querySelector('.empty')) logArea.innerHTML = '';
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `<time>${time}</time><span class="log-dot ${ok ? 'ok' : 'bad'}"></span><span>${message}</span>`;
+    logArea.prepend(entry);
+    if (logArea.children.length > 20) logArea.removeChild(logArea.lastChild);
+  }
+
+  async function fetchStats() {
+    try {
+      const r = await fetch('/stats');
+      const d = await r.json();
+
+      document.getElementById('val-ok').textContent = d.with_vest;
+      document.getElementById('val-bad').textContent = d.without_vest;
+      document.getElementById('val-total').textContent = d.total;
+
+      const fpsEl = document.getElementById('fps-bar');
+      const fpsNum = document.getElementById('fps-num');
+      const fpsPct = Math.min(d.fps / MAX_FPS * 100, 100);
+      fpsEl.style.width = fpsPct + '%';
+      fpsEl.style.background = d.fps >= 15 ? 'var(--ok)' : d.fps >= 8 ? 'var(--mid)' : 'var(--alert)';
+      fpsNum.textContent = d.fps + ' fps';
+      document.getElementById('fps-overlay').textContent = d.fps + ' fps';
+
+      if (d.mode && d.source_label) applySourceMeta(d.mode, d.source_label);
+
+      const statusText = {
+        starting: 'Inicializando sistema...',
+        waiting_camera: 'Aguardando câmera...',
+        loading_model: 'Câmera ativa. Carregando modelo...',
+        running: '',
+        error: d.error || 'Falha no pipeline.'
+      };
+      if (d.status === 'running') {
+        statusEl.classList.add('hidden');
+        statusEl.classList.remove('error');
+      } else {
+        statusEl.textContent = statusText[d.status] || 'Preparando sistema...';
+        statusEl.classList.remove('hidden');
+        statusEl.classList.toggle('error', d.status === 'error');
+      }
+
+      const detEl = document.getElementById('det-bar');
+      const detNum = document.getElementById('det-num');
+      detEl.style.width = Math.min((d.det_fps || 0) / 15 * 100, 100) + '%';
+      detNum.textContent = (d.det_fps || 0) + ' fps';
+
+      const pct = d.total > 0 ? Math.round(d.with_vest / d.total * 100) : null;
+      const bar = document.getElementById('compliance-bar');
+      const lbl = document.getElementById('compliance-pct');
+      const text = document.getElementById('compliance-text');
+      if (pct !== null) {
+        bar.style.width = pct + '%';
+        const tone = pct >= 80 ? 'var(--ok)' : pct >= 50 ? 'var(--mid)' : 'var(--alert)';
+        bar.style.background = tone;
+        lbl.style.color = tone;
+        lbl.textContent = pct + '%';
+        text.textContent = pct >= 80 ? 'Área em conformidade' : pct >= 50 ? 'Atenção recomendada' : 'Intervenção necessária';
+      } else {
+        bar.style.width = '0%';
+        lbl.style.color = 'var(--muted)';
+        lbl.textContent = '--%';
+        text.textContent = 'Sem pessoas na cena';
+      }
+
+      if (d.without_vest !== lastBad && d.total > 0) {
+        lastBad = d.without_vest;
+        const time = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        appendLogEntry(time, d.without_vest === 0, formatDetectionEvent(d.without_vest));
+      }
+    } catch (e) {}
+  }
+
+  setInterval(fetchStats, 500);
+  fetchStats();
+</script>
+</body>
+</html>
