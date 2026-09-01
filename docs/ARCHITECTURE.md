@@ -84,9 +84,9 @@ Em uma máquina de desenvolvimento com quatro processadores lógicos:
 
 - webcam 960×540
 - entrada YOLO 416
-- stream ~18–20 FPS
-- detecção ~3–5 análises/s
-- PyTorch com 2 threads
+- stream ~30 FPS
+- detecção ~30 análises/s (alvo; CPU pode entregar menos)
+- PyTorch com 1 thread
 
 São referência, não garantia. Depois de mudar `config.py`, compare `/stats`.
 

@@ -746,7 +746,7 @@
       const fpsNum = document.getElementById('fps-num');
       const fpsPct = Math.min(d.fps / MAX_FPS * 100, 100);
       fpsEl.style.width = fpsPct + '%';
-      fpsEl.style.background = d.fps >= 15 ? 'var(--ok)' : d.fps >= 8 ? 'var(--mid)' : 'var(--alert)';
+      fpsEl.style.background = d.fps >= 24 ? 'var(--ok)' : d.fps >= 15 ? 'var(--mid)' : 'var(--alert)';
       fpsNum.textContent = d.fps + ' fps';
       document.getElementById('fps-overlay').textContent = d.fps + ' fps';
 
@@ -770,7 +770,7 @@
 
       const detEl = document.getElementById('det-bar');
       const detNum = document.getElementById('det-num');
-      detEl.style.width = Math.min((d.det_fps || 0) / 15 * 100, 100) + '%';
+      detEl.style.width = Math.min((d.det_fps || 0) / MAX_FPS * 100, 100) + '%';
       detNum.textContent = (d.det_fps || 0) + ' fps';
 
       const pct = d.total > 0 ? Math.round(d.with_vest / d.total * 100) : null;

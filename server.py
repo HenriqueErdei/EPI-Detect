@@ -255,6 +255,7 @@ def _encode_loop():
     target = 1.0 / cfg.STREAM_FPS
     enc_times: list = []
     last_arr = None
+    last_dets = None
     renderer = Renderer(mode=_state["mode"])
 
     while _running:
@@ -262,14 +263,15 @@ def _encode_loop():
 
         with _lock:
             arr = _state["raw_frame"]
-            detections = list(_state["detections"])
+            dets_ref = _state["detections"]
+            detections = list(dets_ref)
             renderer.mode = _state["mode"]
 
         if arr is None:
             time.sleep(0.02)
             continue
 
-        if arr is not last_arr:
+        if arr is not last_arr or dets_ref is not last_dets:
             rendered = renderer.render(arr, detections)
             ok, buf = cv2.imencode(".jpg", rendered, [cv2.IMWRITE_JPEG_QUALITY, 85])
             if ok:
@@ -280,6 +282,7 @@ def _encode_loop():
                     _state["jpeg"] = buf.tobytes()
                     _state["stream_fps"] = len(enc_times)
                 last_arr = arr
+                last_dets = dets_ref
 
         elapsed = time.perf_counter() - t0
         sleep = target - elapsed
@@ -289,14 +292,15 @@ def _encode_loop():
 
 # ── MJPEG generator ──────────────────────────────────────────────────────────
 def _gen():
+    last = None
     while True:
         with _lock:
             frame = _state["jpeg"]
-        if frame is None:
-            time.sleep(0.04)
+        if frame is None or frame is last:
+            time.sleep(0.002)
             continue
+        last = frame
         yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
-        time.sleep(1 / cfg.STREAM_FPS)
 
 
 # ── rotas Flask ───────────────────────────────────────────────────────────────
@@ -403,7 +407,8 @@ if __name__ == "__main__":
     print(f"  Fonte  : {redact_source(source)}")
     print(f"  Modo   : {mode}")
     print(f"  URL    : http://localhost:{args.port}")
-    print(f"  Stream : {cfg.STREAM_FPS} fps alvo\n")
+    print(f"  Stream : {cfg.STREAM_FPS} fps alvo")
+    print(f"  Detect : {1.0 / cfg.DETECTION_INTERVAL:.0f} fps alvo\n")
 
     threading.Thread(target=_capture_loop, daemon=True).start()
     threading.Thread(target=_detect_loop, daemon=True).start()

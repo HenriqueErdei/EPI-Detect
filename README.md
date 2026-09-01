@@ -99,8 +99,8 @@ Ajustes em [`config.py`](config.py):
 | Parâmetro | Função |
 |---|---|
 | `INPUT_SIZE` | resolução enviada ao YOLO |
-| `DETECTION_INTERVAL` | intervalo entre inferências |
-| `STREAM_FPS` | FPS alvo do JPEG no painel |
+| `DETECTION_INTERVAL` | intervalo entre inferências (padrão: 1/`STREAM_FPS`) |
+| `STREAM_FPS` | FPS alvo do JPEG e do identificador de colete |
 | `TORCH_THREADS` | threads do PyTorch |
 | `VEST_THRESH` | cobertura fluorescente mínima no torso |
 | `VEST_SIDE_THRESH` | cobertura mínima em cada lado |

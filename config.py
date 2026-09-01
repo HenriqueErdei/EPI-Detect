@@ -34,13 +34,13 @@ VEST_SIDE_THRESH = 0.04
 VEST_SPAN_THRESH = 0.40
 
 # --- Performance ---
-FRAME_SKIP = 8  # detecta 1 a cada N frames; reaproveita o resultado entre inferencias
-STREAM_FPS = 20  # FPS alvo do stream web (encoder thread)
-DETECTION_INTERVAL = 0.20  # ate 5 analises/s; captura e stream nao aguardam a IA
-TORCH_THREADS = 2  # reserva CPU para captura, JPEG e servidor web (maquina com 4 threads)
+STREAM_FPS = 30  # FPS alvo do stream web (encoder thread)
+WEBCAM_FPS = 30
+FRAME_SKIP = 1  # detecta todos os frames para o overlay acompanhar o video
+DETECTION_INTERVAL = 1.0 / STREAM_FPS  # 30 analises/s, sincronizado com o stream
+TORCH_THREADS = 1  # deixa CPU para captura/JPEG; o Fall Detect já usa o restante
 WEBCAM_WIDTH = 960
 WEBCAM_HEIGHT = 540
-WEBCAM_FPS = 30
 
 # --- UI ---
 # OpenCV usa BGR.

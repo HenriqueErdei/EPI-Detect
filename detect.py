@@ -11,6 +11,7 @@ Uso:
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 import cv2
@@ -84,8 +85,10 @@ def main():
     frame_n = 0
     last_dets = []
     running = True
+    frame_delay = 1.0 / (cap.fps if mode == "FILE" else cfg.STREAM_FPS)
 
     while running:
+        started = time.perf_counter()
         ok, frame = cap.read()
         if not ok:
             if mode == "FILE":
@@ -113,7 +116,8 @@ def main():
         if writer:
             writer.write(out)
 
-        key = cv2.waitKey(1) & 0xFF
+        remaining_ms = int((frame_delay - (time.perf_counter() - started)) * 1000)
+        key = cv2.waitKey(max(1, remaining_ms)) & 0xFF
         if key in (ord("q"), ord("Q"), 27):  # Q ou ESC
             running = False
             break
