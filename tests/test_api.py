@@ -34,13 +34,34 @@ def test_source_rejects_empty():
     assert response.get_json()["ok"] is False
 
 
-def test_source_accepts_webcam():
+def test_source_rejects_webcam():
     response = server.app.test_client().post("/source", json={"source": "webcam"})
+    assert response.status_code == 400
+    assert response.get_json()["ok"] is False
+
+
+def test_source_rejects_http_and_file():
+    from io import BytesIO
+
+    client = server.app.test_client()
+    http = client.post("/source", json={"url": "http://camera.local/stream"})
+    assert http.status_code == 400
+    demo = client.post("/source", json={"url": "demo"})
+    assert demo.status_code == 400
+    upload = client.post("/source", data={"file": (BytesIO(b"fake"), "clip.mp4")})
+    assert upload.status_code == 400
+    assert "RTSP" in upload.get_json()["error"]
+
+
+def test_source_accepts_rtsp():
+    response = server.app.test_client().post(
+        "/source", json={"url": "rtsp://user:pass@host:8554/cam-01"}
+    )
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["ok"] is True
     assert payload["mode"] == "LIVE"
-    assert payload["source_label"] == "Webcam"
+    assert payload["source_label"] == "cam-01"
 
 
 def test_source_rejects_demo():

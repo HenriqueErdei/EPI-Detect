@@ -540,15 +540,11 @@
       <button class="source-button" type="button" id="source-button">Fonte</button>
       <div class="source-panel" id="source-panel" hidden>
         <div>
-          <label for="source-url">Link da stream</label>
+          <label for="source-url">Câmera RTSP</label>
           <div class="source-row">
             <input id="source-url" type="text" placeholder="rtsp://usuario:senha@host:8554/camera" autocomplete="off">
             <button class="source-submit" type="button" id="source-url-button">Abrir</button>
           </div>
-        </div>
-        <div>
-          <label for="source-file">Arquivo MP4</label>
-          <input id="source-file" type="file" accept="video/mp4,video/*,.mp4,.avi,.mkv,.mov,.webm">
         </div>
         <div class="source-error" id="source-error" hidden></div>
       </div>
@@ -656,7 +652,6 @@
   const sourcePanel = document.getElementById('source-panel');
   const sourceError = document.getElementById('source-error');
   const sourceUrl = document.getElementById('source-url');
-  const sourceFile = document.getElementById('source-file');
   const statusEl = document.getElementById('system-status');
 
   sourceButton.addEventListener('click', (event) => {
@@ -697,7 +692,6 @@
       }
       applySourceMeta(d.mode, d.source_label);
       sourcePanel.hidden = true;
-      sourceFile.value = '';
     } catch (e) {
       showSourceError('Falha ao trocar a fonte.');
     }
@@ -706,7 +700,11 @@
   document.getElementById('source-url-button').addEventListener('click', async () => {
     const url = sourceUrl.value.trim();
     if (!url) {
-      showSourceError('Cole o link da stream.');
+      showSourceError('Cole o link RTSP.');
+      return;
+    }
+    if (!/^rtsps?:\/\//i.test(url)) {
+      showSourceError('Use um link RTSP (rtsp:// ou rtsps://).');
       return;
     }
     await postSource(JSON.stringify({ url }), 'application/json');
@@ -714,13 +712,6 @@
 
   sourceUrl.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') document.getElementById('source-url-button').click();
-  });
-
-  sourceFile.addEventListener('change', async () => {
-    if (!sourceFile.files.length) return;
-    const data = new FormData();
-    data.append('file', sourceFile.files[0]);
-    await postSource(data);
   });
 
   const MAX_FPS = 30;

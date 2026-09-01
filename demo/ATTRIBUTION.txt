@@ -1,0 +1,10 @@
+demo.mp4 — Mixkit (Stock Video Free License), loop da demo pública:
+
+- mixkit-man-on-the-phone-near-a-construction-site-1442
+  https://mixkit.co/free-stock-video/man-on-the-phone-near-a-construction-site-1442/
+- mixkit-man-puts-on-hard-hat-1440
+  https://mixkit.co/free-stock-video/man-puts-on-hard-hat-1440/
+- mixkit-welder-working-at-a-construction-4125
+  https://mixkit.co/free-stock-video/welder-working-at-a-construction-4125/
+
+Os .mp4 não entram no Git. O painel público só aceita RTSP.

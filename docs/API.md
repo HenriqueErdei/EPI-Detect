@@ -75,9 +75,7 @@ JSON:
 { "url": "rtsp://usuario:senha@host:8554/camera" }
 ```
 
-Também aceita `{ "source": "webcam" }`.
-
-Multipart: campo `file` com vídeo (`.mp4`, `.avi`, `.mkv`, `.mov`, `.webm`), até 500 MB. O arquivo é gravado em `uploads/`.
+O painel público aceita **somente** `rtsp://` ou `rtsps://`. Webcam, HTTP e upload de arquivo ficam no CLI (`--source`).
 
 Resposta `200`:
 
@@ -85,7 +83,7 @@ Resposta `200`:
 { "ok": true, "mode": "LIVE", "source_label": "camera" }
 ```
 
-`400` se a URL/arquivo for inválido. `413` se o upload passar de 500 MB.
+`400` se a URL não for RTSP.
 
 ## `GET /health`
 

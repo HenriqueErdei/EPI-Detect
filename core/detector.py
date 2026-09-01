@@ -27,12 +27,18 @@ SKELETON_PAIRS = [
 ]
 
 
-def is_vest_evidence(coverage: float, left_cov: float, right_cov: float) -> bool:
+def is_vest_evidence(
+    coverage: float,
+    left_cov: float,
+    right_cov: float,
+    vertical_span: float,
+) -> bool:
     """Aplica a regra HSV sem depender do carregamento do modelo YOLO."""
     return (
         coverage >= cfg.VEST_THRESH
         and left_cov >= cfg.VEST_SIDE_THRESH
         and right_cov >= cfg.VEST_SIDE_THRESH
+        and vertical_span >= cfg.VEST_SPAN_THRESH
     )
 
 
@@ -99,8 +105,8 @@ class EPIDetector:
             if kps_data is not None and i < len(kps_data.data):
                 kps = kps_data.data[i].cpu().numpy()  # (17, 3)
 
-            coverage, left_cov, right_cov = self._vest_coverage(frame, x1, y1, x2, y2, kps)
-            has_vest = is_vest_evidence(coverage, left_cov, right_cov)
+            coverage, left_cov, right_cov, span = self._vest_coverage(frame, x1, y1, x2, y2, kps)
+            has_vest = is_vest_evidence(coverage, left_cov, right_cov, span)
 
             detections.append(
                 Detection(
@@ -144,7 +150,7 @@ class EPIDetector:
         crop_y2 = y1 + int(box_h * cfg.TORSO_BOTTOM)
         torso = frame[crop_y1:crop_y2, x1:x2]
         if torso.size == 0:
-            return 0.0, 0.0, 0.0
+            return 0.0, 0.0, 0.0, 0.0
         return self._hsv_coverage(torso)
 
     def _hsv_coverage(self, torso):
@@ -158,7 +164,7 @@ class EPIDetector:
         height, width = torso.shape[:2]
         total = height * width
         if total <= 0 or width < 2:
-            return 0.0, 0.0, 0.0
+            return 0.0, 0.0, 0.0, 0.0
 
         mid = width // 2
         left_total = height * mid
@@ -166,4 +172,6 @@ class EPIDetector:
         coverage = float(np.count_nonzero(mask)) / total
         left_cov = float(np.count_nonzero(mask[:, :mid])) / left_total
         right_cov = float(np.count_nonzero(mask[:, mid:])) / right_total
-        return coverage, left_cov, right_cov
+        occupied_rows = np.count_nonzero(np.any(mask > 0, axis=1))
+        vertical_span = float(occupied_rows) / height
+        return coverage, left_cov, right_cov, vertical_span

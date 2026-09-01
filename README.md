@@ -50,12 +50,12 @@ Na primeira execução a Ultralytics baixa `yolov8n-pose.pt`. Pesos `.pt` não e
 Dashboard (abre o navegador em `http://localhost:5000`):
 
 ```bash
+python server.py --source demo/demo.mp4
 python server.py --source webcam
-python server.py --source videos-teste/exemplo.mp4
 python server.py --source 'rtsp://usuario:senha@host:8554/camera'
 ```
 
-No painel, o botão **Fonte** troca a origem sem reiniciar: cole o link da stream ou escolha um MP4 do computador.
+No painel, **Fonte** troca a origem sem reiniciar: **somente** `rtsp://` ou `rtsps://`. Upload de arquivo, webcam e HTTP estão desligados.
 
 Opções úteis: `--port 5000`, `--host 127.0.0.1`, `--no-browser`.
 
@@ -63,23 +63,23 @@ Modo desktop (janela OpenCV, sem Flask):
 
 ```bash
 python detect.py --source webcam
-python detect.py --source videos-teste/exemplo.mp4 --save resultado.mp4
+python detect.py --source demo/demo.mp4 --save resultado.mp4
 ```
 
-No Windows, `iniciar.bat` sobe o painel. A fonte (stream ou arquivo) é escolhida no navegador.
+No Windows, `iniciar.bat` sobe o painel.
 
 Coloque URLs entre aspas no shell. Não commite usuário, senha ou endereço interno de câmera.
 
 ### Fontes aceitas
 
-| Origem | Modo | Comportamento |
-|---|---|---|
-| `webcam` ou `0` | LIVE | câmera local, frame mais recente |
-| `1`, `2`, … | LIVE | outro índice de câmera |
-| `rtsp://` / `http://` | LIVE | stream de rede, TCP, reconexão se cair |
-| arquivo MP4 (CLI ou upload) | FILE | vídeo em loop |
+| Origem | Onde | Modo | Comportamento |
+|---|---|---|---|
+| `demo/demo.mp4` | CLI / systemd | FILE | loop |
+| `webcam` ou `0` | só CLI | LIVE | câmera local, frame mais recente |
+| `rtsp://` / `rtsps://` | CLI ou painel | LIVE | stream, TCP, reconexão se cair |
+| arquivo MP4 | só CLI | FILE | vídeo em loop |
 
-Uploads do painel vão para `uploads/` (ignorado pelo Git). Não versione vídeos com pessoas ou ambientes privados.
+Os `.mp4` em `demo/` não entram no Git.
 
 ## Painel
 
@@ -104,6 +104,7 @@ Ajustes em [`config.py`](config.py):
 | `TORCH_THREADS` | threads do PyTorch |
 | `VEST_THRESH` | cobertura fluorescente mínima no torso |
 | `VEST_SIDE_THRESH` | cobertura mínima em cada lado |
+| `VEST_SPAN_THRESH` | fração mínima de linhas do torso com cor fluorescente |
 | `ORANGE_*` / `YELLOW_*` | faixas HSV do colete |
 
 ## Estrutura
@@ -116,7 +117,7 @@ EPI-Detect/
 ├── core/                 # captura, detector, overlay
 ├── templates/index.html  # painel (sem build step)
 ├── tests/                # pytest
-├── uploads/              # MP4 enviados pelo painel (ignorado)
+├── deploy/               # systemd de referência
 └── docs/                 # documentação técnica
 ```
 

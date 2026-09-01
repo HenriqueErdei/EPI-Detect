@@ -11,7 +11,7 @@ Não é um sistema certificado de SST, não substitui inspeção humana e não d
 - Localiza pessoas e keypoints com YOLO Pose pré-treinado (`yolov8n-pose.pt`).
 - Estima o retângulo do torso.
 - Procura cores fluorescentes configuradas em HSV (laranja e amarelo-limão).
-- Exige evidência nos dois lados do torso.
+- Exige evidência nos dois lados do torso e span vertical (muitas linhas do peito, não só uma faixa).
 - Aplica maioria temporal na mesma pessoa (associação por IoU).
 
 Nesta versão **não** existe um classificador treinado no formato do colete nem na forma correta de vestí-lo.
@@ -20,16 +20,16 @@ Nesta versão **não** existe um classificador treinado no formato do colete nem
 
 | Classe | Como aparece hoje |
 |---|---|
-| `com_epi` | evidência HSV bilateral suficiente → `with_vest` |
+| `com_epi` | evidência HSV bilateral + span vertical suficiente → `with_vest` |
 | `sem_epi` | evidência insuficiente → `without_vest` |
 | `uso_incorreto` | entra no mesmo contador `without_vest` |
 | `falso_positivo` | ainda não há dataset publicado para medir |
 
 ## Limitações
 
-- Roupa, cone, fita ou fundo fluorescente podem gerar falso positivo.
-- Oclusão, contraluz, pessoa de lado e baixa resolução geram falso negativo.
-- A regra bilateral pode rejeitar quem é visto bem de perfil.
+- Roupa ou fundo fluorescente em área grande ainda podem gerar falso positivo; faixas finas de uniforme cinza tendem a ser rejeitadas.
+- Oclusão, contraluz, pessoa de lado, colete aberto e baixa resolução geram falso negativo.
+- A regra bilateral e o span vertical podem rejeitar quem é visto bem de perfil.
 - A estabilização temporal atrasa um pouco a mudança de estado.
 - Limiares foram calibrados em poucos exemplos.
 - Não há métricas representativas de campo.

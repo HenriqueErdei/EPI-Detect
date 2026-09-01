@@ -13,12 +13,10 @@ import argparse
 import sys
 import threading
 import time
-import uuid
 from pathlib import Path
 
 import cv2
 from flask import Flask, Response, jsonify, render_template, request
-from werkzeug.utils import secure_filename
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -27,13 +25,9 @@ from core.capture import VideoCapture, parse_source, redact_source, source_label
 from core.detector import EPIDetector
 from core.display import Renderer
 
-_ROOT = Path(__file__).parent
-_UPLOAD_DIR = _ROOT / "uploads"
-_ALLOWED_VIDEO = {".mp4", ".avi", ".mkv", ".mov", ".webm"}
-_MAX_UPLOAD = 500 * 1024 * 1024
+_RTSP_SCHEMES = ("rtsp://", "rtsps://")
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = _MAX_UPLOAD
 _lock = threading.Lock()
 
 # estado compartilhado entre threads
@@ -351,34 +345,26 @@ def health():
         return jsonify(payload), (200 if payload["ok"] else 503)
 
 
-@app.errorhandler(413)
-def _too_large(_error):
-    return jsonify({"ok": False, "error": "Arquivo grande demais (máx. 500 MB)."}), 413
-
-
-def _save_upload(upload) -> Path:
-    filename = secure_filename(upload.filename or "")
-    ext = Path(filename).suffix.lower()
-    if ext not in _ALLOWED_VIDEO:
-        raise ValueError("Envie um vídeo MP4, AVI, MKV, MOV ou WEBM.")
-    _UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    dest = _UPLOAD_DIR / f"{uuid.uuid4().hex}{ext}"
-    upload.save(dest)
-    return dest
+def _parse_public_source(raw: str):
+    """Painel público: só RTSP. Arquivo e webcam ficam no CLI (--source)."""
+    url = (raw or "").strip()
+    if not url.lower().startswith(_RTSP_SCHEMES):
+        raise ValueError("Informe um link RTSP (rtsp:// ou rtsps://).")
+    return parse_source(url)
 
 
 @app.route("/source", methods=["POST"])
 def set_source():
+    if "file" in request.files and request.files["file"].filename:
+        return jsonify(
+            {"ok": False, "error": "Upload de vídeo está desativado. Use um link RTSP."}
+        ), 400
+    payload = request.get_json(silent=True) or request.form
+    raw = (payload.get("url") or payload.get("source") or "").strip()
+    if not raw:
+        return jsonify({"ok": False, "error": "Informe um link RTSP (rtsp:// ou rtsps://)."}), 400
     try:
-        if "file" in request.files and request.files["file"].filename:
-            dest = _save_upload(request.files["file"])
-            source, mode = parse_source(str(dest))
-        else:
-            payload = request.get_json(silent=True) or request.form
-            raw = (payload.get("url") or payload.get("source") or "").strip()
-            if not raw:
-                return jsonify({"ok": False, "error": "Informe o link da stream ou um arquivo MP4."}), 400
-            source, mode = parse_source(raw)
+        source, mode = _parse_public_source(raw)
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
     except FileNotFoundError as e:
@@ -402,7 +388,7 @@ if __name__ == "__main__":
     p.add_argument(
         "--source",
         default="webcam",
-        help="'webcam', índice de câmera, caminho de vídeo ou URL RTSP/HTTP",
+        help="webcam, índice, arquivo MP4 ou URL RTSP (o painel só aceita RTSP)",
     )
     p.add_argument("--port", default=5000, type=int)
     p.add_argument("--host", default="127.0.0.1")

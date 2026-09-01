@@ -24,12 +24,14 @@ YELLOW_HIGH = (92, 255, 255)
 # Torso: pescoço (22%) até quadril (78%) — região exata do colete
 TORSO_TOP = 0.22
 TORSO_BOTTOM = 0.78
-# Coletes abertos e pessoas sentadas deixam pouca area fluorescente aparente.
-# 3% ainda exige uma mancha relevante dentro do torso e reconhece esse cenario.
-VEST_THRESH = 0.03
+# Colete cobre uma area grande do peito. Faixas de uniforme cinza ficam ~5-15%.
+VEST_THRESH = 0.20
 # Exige cor fluorescente nos dois lados do torso para rejeitar uma faixa solta
 # colocada somente sobre um braco ou ombro.
-VEST_SIDE_THRESH = 0.005
+VEST_SIDE_THRESH = 0.04
+# Fracao minima de linhas do torso com pixels fluorescentes.
+# Rejeita 1-2 faixas horizontais (cintura/biceps) que nao formam um colete.
+VEST_SPAN_THRESH = 0.40
 
 # --- Performance ---
 FRAME_SKIP = 8  # detecta 1 a cada N frames; reaproveita o resultado entre inferencias

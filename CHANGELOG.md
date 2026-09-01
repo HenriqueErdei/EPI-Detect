@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Alterado
+- Colete exige área fluorescente maior e span vertical no torso, para não confundir uniforme cinza com faixas
+- Painel público troca fonte só por RTSP (sem upload, webcam ou HTTP)
+
 ## [1.2.0] — 2026-08-26
 
 ### Adicionado

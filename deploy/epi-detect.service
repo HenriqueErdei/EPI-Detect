@@ -1,0 +1,14 @@
+[Unit]
+Description=EPI Detect — painel de monitoramento de colete
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/EPI-Detect
+ExecStart=/root/EPI-Detect/.venv/bin/python server.py --source /root/EPI-Detect/demo/demo.mp4 --host 127.0.0.1 --port 5002 --no-browser
+Restart=on-failure
+RestartSec=4
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

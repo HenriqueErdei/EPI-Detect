@@ -52,9 +52,9 @@ Arquivos de vídeo (`FILE`) são lidos em sequência e reiniciam no fim. Webcam 
 1. `yolov8n-pose.pt` encontra pessoas e keypoints.
 2. O recorte do torso vai do pescoço (`TORSO_TOP`) ao quadril (`TORSO_BOTTOM`).
 3. Máscaras HSV procuram laranja e amarelo-limão.
-4. `has_vest=True` só se a cobertura total e os dois lados passam dos limiares, e a maioria das últimas análises da mesma pessoa concorda (IoU).
+4. `has_vest=True` só se a cobertura total, os dois lados e o span vertical passam dos limiares, e a maioria das últimas análises da mesma pessoa concorda (IoU).
 
-Isso reduz falso positivo de faixa num braço só. Não reconhece o formato do colete. Cobertura HSV não deve ser exibida como “confiança”.
+Isso reduz falso positivo de faixa num braço só e de uniforme cinza com fita fluorescente na cintura. Não reconhece o formato do colete. Cobertura HSV não deve ser exibida como “confiança”.
 
 ## Contrato do front-end
 

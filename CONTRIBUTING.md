@@ -14,7 +14,7 @@ Código, testes, UX e visão computacional são bem-vindos. Leia o [README](READ
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 python -m pip install -r requirements-dev.txt
-python server.py --source webcam
+python server.py --source demo/demo.mp4
 ```
 
 ## Onde ajudar

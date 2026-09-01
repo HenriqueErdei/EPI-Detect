@@ -3,14 +3,30 @@
 ## Forma suportada: demo local
 
 ```bash
+python server.py --source demo/demo.mp4 --port 5000
 python server.py --source webcam --port 5000
-python server.py --source caminho/video.mp4
 python server.py --source 'rtsp://usuario:senha@host:8554/camera'
 ```
 
 Host padrão: `127.0.0.1`. Acesse só em http://localhost:5000.
 
 Não use `--host 0.0.0.0` sem os controles abaixo. O Flask embutido não oferece autenticação, HTTPS, limite de requisição nem isolamento da câmera.
+
+## Loop de demo
+
+`demo/*.mp4` está no `.gitignore`. No servidor, aponte o processo para `demo/demo.mp4`.
+
+## systemd (exemplo)
+
+Unit de referência em [`deploy/epi-detect.service`](../deploy/epi-detect.service). Ajuste caminhos, usuário e porta. O processo deve escutar só em `127.0.0.1`.
+
+```bash
+sudo cp deploy/epi-detect.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now epi-detect
+```
+
+Na frente, use um proxy (Nginx) com HTTPS se a demo for pública. Não exponha o Flask direto na internet.
 
 ## Stream RTSP
 
